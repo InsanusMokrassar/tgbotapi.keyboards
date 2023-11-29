@@ -1,4 +1,4 @@
-rootProject.name = 'project_name'
+rootProject.name = 'tgbotapi.keyboards'
 
 String[] includes = [
     ":lib"

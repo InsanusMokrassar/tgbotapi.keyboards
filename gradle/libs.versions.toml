@@ -3,6 +3,8 @@
 kotlin = "1.9.21"
 kotlin-serialization = "1.6.1"
 
+tgbotapi = "9.4.1"
+
 dokka = "1.9.10"
 
 dexcount = "4.0.0"
@@ -18,6 +20,7 @@ android-buildTools = "34.0.0"
 [libraries]
 
 kotlin = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+tgbotapi-bb = { module = "dev.inmo:tgbotapi.behaviour_builder", version.ref = "tgbotapi" }
 kotlin-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialization" }
 kotlin-test-common = { module = "org.jetbrains.kotlin:kotlin-test-common", version.ref = "kotlin" }
 kotlin-test-annotations-common = { module = "org.jetbrains.kotlin:kotlin-test-annotations-common", version.ref = "kotlin" }

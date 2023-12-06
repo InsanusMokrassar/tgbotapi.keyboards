@@ -1,7 +1,8 @@
 rootProject.name = 'tgbotapi.keyboards'
 
 String[] includes = [
-    ":lib"
+    ":lib",
+    ":sample",
 ]
 
 

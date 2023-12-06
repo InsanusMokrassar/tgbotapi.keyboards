@@ -20,6 +20,7 @@ android-buildTools = "34.0.0"
 [libraries]
 
 kotlin = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+tgbotapi = { module = "dev.inmo:tgbotapi", version.ref = "tgbotapi" }
 tgbotapi-bb = { module = "dev.inmo:tgbotapi.behaviour_builder", version.ref = "tgbotapi" }
 kotlin-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlin-serialization" }
 kotlin-test-common = { module = "org.jetbrains.kotlin:kotlin-test-common", version.ref = "kotlin" }

@@ -1,10 +1,10 @@
 package dev.inmo.tgbotapi.keyboards.lib
 
-import dev.inmo.micro_utils.coroutines.subscribeSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.CustomBehaviourContextAndTypeReceiver
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onBaseInlineQuery
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onDataCallbackQuery
+import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPreCheckoutQuery
 import dev.inmo.tgbotapi.extensions.behaviour_builder.utils.SimpleFilter
 import dev.inmo.tgbotapi.requests.edit.reply_markup.EditChatMessageReplyMarkup
 import dev.inmo.tgbotapi.requests.edit.reply_markup.EditInlineMessageReplyMarkup
@@ -12,6 +12,7 @@ import dev.inmo.tgbotapi.types.InlineQueries.query.BaseInlineQuery
 import dev.inmo.tgbotapi.types.InlineQueries.query.InlineQuery
 import dev.inmo.tgbotapi.types.LoginURL
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.*
+import dev.inmo.tgbotapi.types.payments.PreCheckoutQuery
 import dev.inmo.tgbotapi.types.queries.callback.DataCallbackQuery
 import dev.inmo.tgbotapi.types.queries.callback.InlineMessageIdDataCallbackQuery
 import dev.inmo.tgbotapi.types.queries.callback.MessageDataCallbackQuery
@@ -97,12 +98,21 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
         }
         class Pay<BC : BehaviourContext> (
             val textBuilder: suspend BC.() -> String,
+            val initialFilter: SimpleFilter<PreCheckoutQuery>? = null,
+            val onPreCheckoutQueryCallback: CustomBehaviourContextAndTypeReceiver<BC, Unit, PreCheckoutQuery>? = null
         ) : Button<BC> {
             override suspend fun buildButton(context: BC): InlineKeyboardButton = PayInlineKeyboardButton(
                 textBuilder(context),
             )
 
             override suspend fun includeTriggers(context: BC) {
+                with(context) {
+                    onPreCheckoutQueryCallback ?.let { onPreCheckout ->
+                        onPreCheckoutQuery(initialFilter) {
+                            onPreCheckout(it)
+                        }
+                    }
+                }
             }
         }
         class SwitchInlineQueryChosenChat<BC : BehaviourContext> (

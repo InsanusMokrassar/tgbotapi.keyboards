@@ -4,6 +4,7 @@ plugins {
 }
 
 apply from: "$mppJavaJsProjectPresetPath"
+apply from: "$publishGradlePath"
 
 kotlin {
     sourceSets {

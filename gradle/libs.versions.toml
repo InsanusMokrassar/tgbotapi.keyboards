@@ -1,9 +1,9 @@
 [versions]
 
 kotlin = "1.9.21"
-kotlin-serialization = "1.6.1"
+kotlin-serialization = "1.6.2"
 
-tgbotapi = "9.4.1"
+tgbotapi = "9.4.2"
 
 dokka = "1.9.10"
 

@@ -1,16 +1,28 @@
 package dev.inmo.tgbotapi.keyboards.lib
 
+import dev.inmo.micro_utils.common.Either
+import dev.inmo.micro_utils.common.mapOnFirst
+import dev.inmo.micro_utils.common.mapOnSecond
+import dev.inmo.micro_utils.coroutines.launchSafelyWithoutExceptions
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.CustomBehaviourContextAndTypeReceiver
+import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitBaseInlineQuery
+import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitInlineMessageIdDataCallbackQuery
+import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitMessageDataCallbackQuery
+import dev.inmo.tgbotapi.extensions.behaviour_builder.expectations.waitPreCheckoutQueries
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onBaseInlineQuery
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onDataCallbackQuery
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPreCheckoutQuery
 import dev.inmo.tgbotapi.extensions.behaviour_builder.utils.SimpleFilter
+import dev.inmo.tgbotapi.extensions.utils.extensions.sameMessage
 import dev.inmo.tgbotapi.requests.edit.reply_markup.EditChatMessageReplyMarkup
 import dev.inmo.tgbotapi.requests.edit.reply_markup.EditInlineMessageReplyMarkup
+import dev.inmo.tgbotapi.types.ChatIdentifier
+import dev.inmo.tgbotapi.types.InlineMessageIdentifier
 import dev.inmo.tgbotapi.types.InlineQueries.query.BaseInlineQuery
 import dev.inmo.tgbotapi.types.InlineQueries.query.InlineQuery
 import dev.inmo.tgbotapi.types.LoginURL
+import dev.inmo.tgbotapi.types.MessageIdentifier
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.*
 import dev.inmo.tgbotapi.types.payments.PreCheckoutQuery
 import dev.inmo.tgbotapi.types.queries.callback.DataCallbackQuery
@@ -18,6 +30,7 @@ import dev.inmo.tgbotapi.types.queries.callback.InlineMessageIdDataCallbackQuery
 import dev.inmo.tgbotapi.types.queries.callback.MessageDataCallbackQuery
 import dev.inmo.tgbotapi.types.webapps.WebAppInfo
 import dev.inmo.tgbotapi.utils.MatrixBuilder
+import kotlinx.coroutines.flow.*
 
 class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.Button<BC>>() {
     sealed interface Button<BC : BehaviourContext> {
@@ -29,7 +42,7 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
             sealed interface Reaction<BC : BehaviourContext> {
                 class Keyboard<BC : BehaviourContext>(
                     val transitiveRegistration: Boolean = true,
-                    val keyboardMenu: KeyboardMenu<BC>
+                    val keyboardMenu: KeyboardMenu<BC>?
                 ) : Reaction<BC>
                 class Action<BC : BehaviourContext>(
                     val callback: suspend BC.(DataCallbackQuery) -> Unit
@@ -51,10 +64,10 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
                         }
                         is Reaction.Keyboard -> {
                             if (reaction.transitiveRegistration) {
-                                reaction.keyboardMenu.setupTriggers(this)
+                                reaction.keyboardMenu ?.setupTriggers(this)
                             }
                             onDataCallbackQuery(id) {
-                                val keyboard = reaction.keyboardMenu.buildButtons(this)
+                                val keyboard = reaction.keyboardMenu ?.buildButtons(this)
                                 when (it) {
                                     is InlineMessageIdDataCallbackQuery -> execute(
                                         EditInlineMessageReplyMarkup(
@@ -74,6 +87,37 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
                         }
                     }
                 }
+            }
+
+            override suspend fun performWaiters(
+                context: BC,
+                messageInfo: Either<Pair<ChatIdentifier, MessageIdentifier>, InlineMessageIdentifier>
+            ): Flow<KeyboardMenu<BC>?> {
+                val filteredFlow = with(context) {
+                    messageInfo.mapOnFirst { (chatId, messageId) ->
+                        waitMessageDataCallbackQuery().filter {
+                            it.message.sameMessage(chatId, messageId) && it.data == id
+                        }
+                    } ?: messageInfo.mapOnSecond { messageId ->
+                        waitInlineMessageIdDataCallbackQuery().filter {
+                            it.inlineMessageId == messageId && it.data == id
+                        }
+                    } ?: emptyFlow()
+                }
+                val resultFlow: Flow<KeyboardMenu<BC>?> = when (reaction) {
+                    is Reaction.Action -> with(context) {
+                        launchSafelyWithoutExceptions {
+                            filteredFlow.collect {
+                                reaction.callback(context, it)
+                            }
+                        }
+                        emptyFlow()
+                    }
+                    is Reaction.Keyboard -> filteredFlow.map {
+                        reaction.keyboardMenu
+                    }
+                }
+                return resultFlow
             }
         }
         class Game<BC : BehaviourContext> (
@@ -114,6 +158,22 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
                     }
                 }
             }
+
+            override suspend fun performWaiters(
+                context: BC,
+                messageInfo: Either<Pair<ChatIdentifier, MessageIdentifier>, InlineMessageIdentifier>
+            ): Flow<KeyboardMenu<BC>?> {
+                with (context) {
+                    onPreCheckoutQueryCallback ?.let { onPreCheckoutQueryCallback ->
+                        launchSafelyWithoutExceptions {
+                            waitPreCheckoutQueries().collect {
+                                onPreCheckoutQueryCallback(context, it)
+                            }
+                        }
+                    }
+                }
+                return super.performWaiters(context, messageInfo)
+            }
         }
         class SwitchInlineQueryChosenChat<BC : BehaviourContext> (
             val textBuilder: suspend BC.() -> String,
@@ -134,6 +194,22 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
                         }
                     }
                 }
+            }
+
+            override suspend fun performWaiters(
+                context: BC,
+                messageInfo: Either<Pair<ChatIdentifier, MessageIdentifier>, InlineMessageIdentifier>
+            ): Flow<KeyboardMenu<BC>?> {
+                with (context) {
+                    onBaseInlineQueryCallback ?.let { onBaseInlineQueryCallback ->
+                        launchSafelyWithoutExceptions {
+                            waitBaseInlineQuery().collect {
+                                onBaseInlineQueryCallback(context, it)
+                            }
+                        }
+                    }
+                }
+                return super.performWaiters(context, messageInfo)
             }
         }
         class SwitchInlineQueryCurrentChat<BC : BehaviourContext> (
@@ -156,6 +232,23 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
                     }
                 }
             }
+
+
+            override suspend fun performWaiters(
+                context: BC,
+                messageInfo: Either<Pair<ChatIdentifier, MessageIdentifier>, InlineMessageIdentifier>
+            ): Flow<KeyboardMenu<BC>?> {
+                with (context) {
+                    onBaseInlineQueryCallback ?.let { onBaseInlineQueryCallback ->
+                        launchSafelyWithoutExceptions {
+                            waitBaseInlineQuery().collect {
+                                onBaseInlineQueryCallback(context, it)
+                            }
+                        }
+                    }
+                }
+                return super.performWaiters(context, messageInfo)
+            }
         }
         class SwitchInlineQuery<BC : BehaviourContext> (
             val textBuilder: suspend BC.() -> String,
@@ -176,6 +269,23 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
                         }
                     }
                 }
+            }
+
+
+            override suspend fun performWaiters(
+                context: BC,
+                messageInfo: Either<Pair<ChatIdentifier, MessageIdentifier>, InlineMessageIdentifier>
+            ): Flow<KeyboardMenu<BC>?> {
+                with (context) {
+                    onBaseInlineQueryCallback ?.let { onBaseInlineQueryCallback ->
+                        launchSafelyWithoutExceptions {
+                            waitBaseInlineQuery().collect {
+                                onBaseInlineQueryCallback(context, it)
+                            }
+                        }
+                    }
+                }
+                return super.performWaiters(context, messageInfo)
             }
         }
         class URL<BC : BehaviourContext> (
@@ -204,6 +314,7 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
 
         suspend fun buildButton(context: BC): InlineKeyboardButton
         suspend fun includeTriggers(context: BC)
+        suspend fun performWaiters(context: BC, messageInfo: Either<Pair<ChatIdentifier, MessageIdentifier>, InlineMessageIdentifier>): Flow<KeyboardMenu<BC>?> = emptyFlow()
     }
 
     fun buildFreezed(): KeyboardMenu<BC> {

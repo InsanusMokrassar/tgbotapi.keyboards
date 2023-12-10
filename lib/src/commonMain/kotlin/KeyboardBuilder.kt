@@ -37,12 +37,14 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
         class Data<BC : BehaviourContext> (
             val id: String,
             val reaction: Reaction<BC>,
+            val callbacksRegex: Regex = Regex(id),
             val textBuilder: suspend BC.() -> String
         ) : Button<BC> {
             sealed interface Reaction<BC : BehaviourContext> {
                 class Keyboard<BC : BehaviourContext>(
                     val transitiveRegistration: Boolean = true,
-                    val keyboardMenu: KeyboardMenu<BC>?
+                    val keyboardMenu: KeyboardMenu<BC>?,
+                    val keyboardMenuBuilder: suspend BC.(DataCallbackQuery) -> KeyboardMenu<BC>? = { keyboardMenu }
                 ) : Reaction<BC>
                 class Action<BC : BehaviourContext>(
                     val callback: suspend BC.(DataCallbackQuery) -> Unit
@@ -66,8 +68,8 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
                             if (reaction.transitiveRegistration) {
                                 reaction.keyboardMenu ?.setupTriggers(this)
                             }
-                            onDataCallbackQuery(id) {
-                                val keyboard = reaction.keyboardMenu ?.buildButtons(this)
+                            onDataCallbackQuery(callbacksRegex) {
+                                val keyboard = reaction.keyboardMenuBuilder(this, it) ?.buildButtons(this)
                                 when (it) {
                                     is InlineMessageIdDataCallbackQuery -> execute(
                                         EditInlineMessageReplyMarkup(
@@ -96,11 +98,11 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
                 val filteredFlow = with(context) {
                     messageInfo.mapOnFirst { (chatId, messageId) ->
                         waitMessageDataCallbackQuery().filter {
-                            it.message.sameMessage(chatId, messageId) && it.data == id
+                            it.message.sameMessage(chatId, messageId) && callbacksRegex.matches(it.data)
                         }
                     } ?: messageInfo.mapOnSecond { messageId ->
                         waitInlineMessageIdDataCallbackQuery().filter {
-                            it.inlineMessageId == messageId && it.data == id
+                            it.inlineMessageId == messageId && callbacksRegex.matches(it.data)
                         }
                     } ?: emptyFlow()
                 }
@@ -114,7 +116,7 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
                         emptyFlow()
                     }
                     is Reaction.Keyboard -> filteredFlow.map {
-                        reaction.keyboardMenu
+                        reaction.keyboardMenuBuilder(context, it)
                     }
                 }
                 return resultFlow

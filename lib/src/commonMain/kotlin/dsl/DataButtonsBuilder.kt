@@ -38,7 +38,7 @@ fun <BC : BehaviourContext> RowBuilder<KeyboardBuilder.Button<BC>>.data(
     textBuilder: suspend BC.() -> String
 ) = +KeyboardBuilder.Button.Data(
     id = id,
-    reaction = KeyboardBuilder.Button.Data.Reaction.Keyboard(menu, callbacksRegex, transitiveRegistration, menuBuilder),
+    reaction = KeyboardBuilder.Button.Data.Reaction.Keyboard(menu, transitiveRegistration, menuBuilder),
     callbacksRegex = callbacksRegex,
     textBuilder = textBuilder
 )

@@ -42,8 +42,8 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
         ) : Button<BC> {
             sealed interface Reaction<BC : BehaviourContext> {
                 class Keyboard<BC : BehaviourContext>(
-                    val transitiveRegistration: Boolean = true,
                     val keyboardMenu: KeyboardMenu<BC>?,
+                    val transitiveRegistration: Boolean = true,
                     val keyboardMenuBuilder: suspend BC.(DataCallbackQuery) -> KeyboardMenu<BC>? = { keyboardMenu }
                 ) : Reaction<BC>
                 class Action<BC : BehaviourContext>(
@@ -61,7 +61,7 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
             override suspend fun includeTriggers(context: BC) {
                 with(context) {
                     when (reaction) {
-                        is Reaction.Action -> onDataCallbackQuery(id) {
+                        is Reaction.Action -> onDataCallbackQuery(callbacksRegex) {
                             reaction.callback(this, it)
                         }
                         is Reaction.Keyboard -> {

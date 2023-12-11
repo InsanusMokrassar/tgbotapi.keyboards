@@ -9,13 +9,13 @@ inline fun <BC : BehaviourContext> buildMenu(menuBuilder: KeyboardBuilder<BC>.()
     return KeyboardBuilder<BC>().apply(menuBuilder).buildFreezed()
 }
 
-inline fun <BC : BehaviourContext> KeyboardBuilder.Button.Data.Reaction.Companion.Keyboard(
-    noinline menuBuilder: KeyboardBuilder<BC>.(DataCallbackQuery?) -> Unit
+fun <BC : BehaviourContext> KeyboardBuilder.Button.Data.Reaction.Companion.Keyboard(
+    menuBuilder: KeyboardBuilder<BC>.(DataCallbackQuery?) -> Unit
 ): KeyboardBuilder.Button.Data.Reaction.Keyboard<BC> = KeyboardBuilder.Button.Data.Reaction.Keyboard(
-    transitiveRegistration = true,
     keyboardMenu = buildMenu {
         menuBuilder(null)
-    }
+    },
+    transitiveRegistration = true
 ) {
     buildMenu {
         menuBuilder(it)

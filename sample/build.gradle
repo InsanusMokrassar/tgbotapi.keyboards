@@ -1,0 +1,23 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm'
+    id "org.jetbrains.kotlin.plugin.serialization"
+    id "application"
+}
+
+project.group="$group"
+project.version="$version"
+
+dependencies {
+    api project(":tgbotapi.keyboards.lib")
+    api libs.tgbotapi
+}
+
+application {
+    mainClassName = 'dev.inmo.tgbotapi.keyboards.sample.MainKt'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+

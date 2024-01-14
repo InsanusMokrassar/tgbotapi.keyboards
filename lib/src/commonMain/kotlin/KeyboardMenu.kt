@@ -4,8 +4,6 @@ import dev.inmo.micro_utils.common.Either
 import dev.inmo.micro_utils.common.either
 import dev.inmo.micro_utils.common.onFirst
 import dev.inmo.micro_utils.common.onSecond
-import dev.inmo.micro_utils.coroutines.LinkedSupervisorScope
-import dev.inmo.micro_utils.coroutines.firstNotNull
 import dev.inmo.micro_utils.coroutines.launchSafelyWithoutExceptions
 import dev.inmo.tgbotapi.bot.exceptions.MessageIsNotModifiedException
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
@@ -21,7 +19,6 @@ import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
 import dev.inmo.tgbotapi.types.buttons.Matrix
 import dev.inmo.tgbotapi.types.message.abstracts.Message
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.*
 
 class KeyboardMenu<BC : BehaviourContext> internal constructor(
@@ -132,6 +129,11 @@ class KeyboardMenu<BC : BehaviourContext> internal constructor(
             }
         )
     }
+}
+
+suspend fun <BC : BehaviourContext> BC.setupMenuTriggers(menu: KeyboardMenu<in BC>): KeyboardMenu<in BC> {
+    menu.setupTriggers(this)
+    return menu
 }
 
 suspend fun <BC : BehaviourContext> KeyboardMenu<BC>.attachToMessage(

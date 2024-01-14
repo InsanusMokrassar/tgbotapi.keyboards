@@ -3,19 +3,18 @@ package dev.inmo.tgbotapi.keyboards.sample
 import dev.inmo.kslog.common.KSLog
 import dev.inmo.kslog.common.LogLevel
 import dev.inmo.kslog.common.defaultMessageFormatterWithErrorPrint
-import dev.inmo.micro_utils.common.either
 import dev.inmo.micro_utils.coroutines.launchSafelyWithoutExceptions
 import dev.inmo.tgbotapi.bot.ktor.telegramBot
 import dev.inmo.tgbotapi.extensions.api.answers.answer
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviourWithLongPolling
-import dev.inmo.tgbotapi.extensions.behaviour_builder.createSubContextAndDoWithUpdatesFilter
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommandWithArgs
 import dev.inmo.tgbotapi.keyboards.lib.KeyboardMenu
 import dev.inmo.tgbotapi.keyboards.lib.attachToMessageWithWaiters
 import dev.inmo.tgbotapi.keyboards.lib.dsl.*
+import dev.inmo.tgbotapi.keyboards.lib.setupMenuTriggers
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.SwitchInlineQueryChosenChat
 import dev.inmo.tgbotapi.utils.row
 
@@ -86,7 +85,7 @@ suspend fun main(args: Array<String>) {
     val globalMenu = buildMenuWithParameters(null)
 
     bot.buildBehaviourWithLongPolling {
-        globalMenu.setupTriggers(this)
+        setupMenuTriggers(globalMenu)
 
         onCommand("start") {
             reply(

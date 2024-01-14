@@ -26,6 +26,7 @@ import dev.inmo.tgbotapi.types.MessageIdentifier
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.*
 import dev.inmo.tgbotapi.types.payments.PreCheckoutQuery
 import dev.inmo.tgbotapi.types.queries.callback.DataCallbackQuery
+import dev.inmo.tgbotapi.types.queries.callback.InaccessibleMessageDataCallbackQuery
 import dev.inmo.tgbotapi.types.queries.callback.InlineMessageIdDataCallbackQuery
 import dev.inmo.tgbotapi.types.queries.callback.MessageDataCallbackQuery
 import dev.inmo.tgbotapi.types.webapps.WebAppInfo
@@ -84,6 +85,7 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
                                             keyboard
                                         )
                                     )
+                                    is InaccessibleMessageDataCallbackQuery -> return@onDataCallbackQuery
                                 }
                             }
                         }

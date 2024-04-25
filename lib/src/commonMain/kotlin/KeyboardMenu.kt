@@ -12,9 +12,8 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.stop
 import dev.inmo.tgbotapi.requests.edit.reply_markup.EditChatMessageReplyMarkup
 import dev.inmo.tgbotapi.requests.edit.reply_markup.EditInlineMessageReplyMarkup
 import dev.inmo.tgbotapi.types.ChatIdentifier
-import dev.inmo.tgbotapi.types.InlineMessageIdentifier
+import dev.inmo.tgbotapi.types.InlineMessageId
 import dev.inmo.tgbotapi.types.MessageId
-import dev.inmo.tgbotapi.types.MessageIdentifier
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
 import dev.inmo.tgbotapi.types.buttons.Matrix
 import dev.inmo.tgbotapi.types.message.abstracts.Message
@@ -24,7 +23,11 @@ import kotlinx.coroutines.flow.*
 class KeyboardMenu<BC : BehaviourContext> internal constructor(
     private val buttonsGetter: suspend BC.() -> Matrix<KeyboardBuilder.Button<BC>>
 ) {
-    internal constructor(matrix: Matrix<KeyboardBuilder.Button<BC>>) : this({ matrix })
+    internal constructor(
+        matrix: Matrix<KeyboardBuilder.Button<BC>>
+    ) : this(
+        { matrix }
+    )
 
     suspend fun setupTriggers(context: BC) {
         context.buttonsGetter().forEach { row ->
@@ -34,7 +37,7 @@ class KeyboardMenu<BC : BehaviourContext> internal constructor(
         }
     }
 
-    suspend fun setupWaitersPerforming(context: BC, messageInfo: Either<Pair<ChatIdentifier, MessageIdentifier>, InlineMessageIdentifier>): Job {
+    suspend fun setupWaitersPerforming(context: BC, messageInfo: Either<Pair<ChatIdentifier, MessageId>, InlineMessageId>): Job {
         val subcontext = context.createSubContext()
 
         return subcontext.launchSafelyWithoutExceptions {
@@ -85,7 +88,7 @@ class KeyboardMenu<BC : BehaviourContext> internal constructor(
 
     suspend fun attachToMessage(
         context: BC,
-        messageInfo: Either<Pair<ChatIdentifier, MessageIdentifier>, InlineMessageIdentifier>,
+        messageInfo: Either<Pair<ChatIdentifier, MessageId>, InlineMessageId>,
         useWaiters: Boolean = false
     ) = with(context) {
         runCatching {
@@ -153,7 +156,7 @@ suspend fun <BC : BehaviourContext> KeyboardMenu<BC>.attachToMessage(
 
 suspend fun <BC : BehaviourContext> KeyboardMenu<BC>.attachToMessage(
     context: BC,
-    messageId: InlineMessageIdentifier
+    messageId: InlineMessageId
 ) {
     attachToMessage(context, messageId.either())
 }
@@ -173,7 +176,7 @@ suspend fun <BC : BehaviourContext> KeyboardMenu<BC>.attachToMessageWithWaiters(
 
 suspend fun <BC : BehaviourContext> KeyboardMenu<BC>.attachToMessageWithWaiters(
     context: BC,
-    messageId: InlineMessageIdentifier
+    messageId: InlineMessageId
 ): Job {
     return attachToMessage(context = context, messageInfo = messageId.either(), useWaiters = true)!!
 }

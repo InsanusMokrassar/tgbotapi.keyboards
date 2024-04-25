@@ -22,16 +22,17 @@ fun buildMenuWithParameters(parameter: String?): KeyboardMenu<BehaviourContext> 
     val actualParameter = parameter ?.let { " $parameter" } ?: ""
     return buildMenu globalMenu@{
         row {
-            dataWithNewMenu(
+            dataWithSubMenu(
                 id = "sample$actualParameter",
                 text = "Sample$actualParameter"
             ) {
                 row {
-                    data(
+                    dataWithOptionalSubMenu(
                         id = "back_to_global$actualParameter",
                         text = "Back$actualParameter",
-                        menu = this@globalMenu.buildLazy()
-                    )
+                    ) {
+                        if (it != null) this@globalMenu.buildLazy() else null
+                    }
                     data(
                         id = "sample2$actualParameter",
                         text = "Sample 2$actualParameter"

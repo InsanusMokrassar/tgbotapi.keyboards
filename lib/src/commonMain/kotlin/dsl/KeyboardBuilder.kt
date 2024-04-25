@@ -11,12 +11,7 @@ inline fun <BC : BehaviourContext> buildMenu(menuBuilder: KeyboardBuilder<BC>.()
 
 fun <BC : BehaviourContext> KeyboardBuilder.Button.Data.Reaction.Companion.Keyboard(
     menuBuilder: KeyboardBuilder<BC>.(DataCallbackQuery?) -> Unit
-): KeyboardBuilder.Button.Data.Reaction.Keyboard<BC> = KeyboardBuilder.Button.Data.Reaction.Keyboard(
-    keyboardMenu = buildMenu {
-        menuBuilder(null)
-    },
-    transitiveRegistration = true
-) {
+): KeyboardBuilder.Button.Data.Reaction.Keyboard<BC> = KeyboardBuilder.Button.Data.Reaction.Keyboard {
     buildMenu {
         menuBuilder(it)
     }

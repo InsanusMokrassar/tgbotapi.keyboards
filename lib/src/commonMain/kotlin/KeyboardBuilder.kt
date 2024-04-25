@@ -17,12 +17,9 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.utils.SimpleFilter
 import dev.inmo.tgbotapi.extensions.utils.extensions.sameMessage
 import dev.inmo.tgbotapi.requests.edit.reply_markup.EditChatMessageReplyMarkup
 import dev.inmo.tgbotapi.requests.edit.reply_markup.EditInlineMessageReplyMarkup
-import dev.inmo.tgbotapi.types.ChatIdentifier
-import dev.inmo.tgbotapi.types.InlineMessageIdentifier
+import dev.inmo.tgbotapi.types.*
 import dev.inmo.tgbotapi.types.InlineQueries.query.BaseInlineQuery
 import dev.inmo.tgbotapi.types.InlineQueries.query.InlineQuery
-import dev.inmo.tgbotapi.types.LoginURL
-import dev.inmo.tgbotapi.types.MessageIdentifier
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardButtons.*
 import dev.inmo.tgbotapi.types.payments.PreCheckoutQuery
 import dev.inmo.tgbotapi.types.queries.callback.DataCallbackQuery
@@ -41,12 +38,22 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
             val callbacksRegex: Regex = Regex(id),
             val textBuilder: suspend BC.() -> String
         ) : Button<BC> {
+            /**
+             * Reaction onto [DataCallbackQuery] event
+             */
             sealed interface Reaction<BC : BehaviourContext> {
+                /**
+                 * When [DataCallbackQuery] event happen, will build new [KeyboardMenu] as well as react onto event
+                 *
+                 * @param keyboardMenuBuilder Will receive null [DataCallbackQuery] on setup of triggers stage
+                 */
                 class Keyboard<BC : BehaviourContext>(
-                    val keyboardMenu: KeyboardMenu<BC>?,
-                    val transitiveRegistration: Boolean = true,
-                    val keyboardMenuBuilder: suspend BC.(DataCallbackQuery) -> KeyboardMenu<BC>? = { keyboardMenu }
+                    val keyboardMenuBuilder: suspend BC.(DataCallbackQuery?) -> KeyboardMenu<BC>?
                 ) : Reaction<BC>
+
+                /**
+                 * Simple action as reaction onto [DataCallbackQuery] event
+                 */
                 class Action<BC : BehaviourContext>(
                     val callback: suspend BC.(DataCallbackQuery) -> Unit
                 ) : Reaction<BC>
@@ -66,9 +73,7 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
                             reaction.callback(this, it)
                         }
                         is Reaction.Keyboard -> {
-                            if (reaction.transitiveRegistration) {
-                                reaction.keyboardMenu ?.setupTriggers(this)
-                            }
+                            reaction.keyboardMenuBuilder.invoke(this, null) ?.setupTriggers(this)
                             onDataCallbackQuery(callbacksRegex) {
                                 val keyboard = reaction.keyboardMenuBuilder(this, it) ?.buildButtons(this)
                                 when (it) {
@@ -95,7 +100,7 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
 
             override suspend fun performWaiters(
                 context: BC,
-                messageInfo: Either<Pair<ChatIdentifier, MessageIdentifier>, InlineMessageIdentifier>
+                messageInfo: Either<Pair<ChatIdentifier, MessageId>, InlineMessageId>
             ): Flow<KeyboardMenu<BC>?> {
                 val filteredFlow = with(context) {
                     messageInfo.mapOnFirst { (chatId, messageId) ->
@@ -165,7 +170,7 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
 
             override suspend fun performWaiters(
                 context: BC,
-                messageInfo: Either<Pair<ChatIdentifier, MessageIdentifier>, InlineMessageIdentifier>
+                messageInfo: Either<Pair<ChatIdentifier, MessageId>, InlineMessageId>
             ): Flow<KeyboardMenu<BC>?> {
                 with (context) {
                     onPreCheckoutQueryCallback ?.let { onPreCheckoutQueryCallback ->
@@ -202,7 +207,7 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
 
             override suspend fun performWaiters(
                 context: BC,
-                messageInfo: Either<Pair<ChatIdentifier, MessageIdentifier>, InlineMessageIdentifier>
+                messageInfo: Either<Pair<ChatIdentifier, MessageId>, InlineMessageId>
             ): Flow<KeyboardMenu<BC>?> {
                 with (context) {
                     onBaseInlineQueryCallback ?.let { onBaseInlineQueryCallback ->
@@ -240,7 +245,7 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
 
             override suspend fun performWaiters(
                 context: BC,
-                messageInfo: Either<Pair<ChatIdentifier, MessageIdentifier>, InlineMessageIdentifier>
+                messageInfo: Either<Pair<ChatIdentifier, MessageId>, InlineMessageId>
             ): Flow<KeyboardMenu<BC>?> {
                 with (context) {
                     onBaseInlineQueryCallback ?.let { onBaseInlineQueryCallback ->
@@ -278,7 +283,7 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
 
             override suspend fun performWaiters(
                 context: BC,
-                messageInfo: Either<Pair<ChatIdentifier, MessageIdentifier>, InlineMessageIdentifier>
+                messageInfo: Either<Pair<ChatIdentifier, MessageId>, InlineMessageId>
             ): Flow<KeyboardMenu<BC>?> {
                 with (context) {
                     onBaseInlineQueryCallback ?.let { onBaseInlineQueryCallback ->
@@ -318,7 +323,7 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
 
         suspend fun buildButton(context: BC): InlineKeyboardButton
         suspend fun includeTriggers(context: BC)
-        suspend fun performWaiters(context: BC, messageInfo: Either<Pair<ChatIdentifier, MessageIdentifier>, InlineMessageIdentifier>): Flow<KeyboardMenu<BC>?> = emptyFlow()
+        suspend fun performWaiters(context: BC, messageInfo: Either<Pair<ChatIdentifier, MessageId>, InlineMessageId>): Flow<KeyboardMenu<BC>?> = emptyFlow()
     }
 
     fun buildFreezed(): KeyboardMenu<BC> {

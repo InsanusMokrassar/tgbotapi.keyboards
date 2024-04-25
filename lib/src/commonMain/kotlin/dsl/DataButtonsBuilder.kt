@@ -29,45 +29,51 @@ fun <BC : BehaviourContext> RowBuilder<KeyboardBuilder.Button<BC>>.data(
     callbacksRegex = callbacksRegex,
     textBuilder = textBuilder
 )
-fun <BC : BehaviourContext> RowBuilder<KeyboardBuilder.Button<BC>>.data(
+
+/**
+ * Build default data button with optionally included submenu (if not null)
+ *
+ * @param menuBuilder Will receive null as [DataCallbackQuery] on setup stage to setup full menu triggers
+ */
+fun <BC : BehaviourContext> RowBuilder<KeyboardBuilder.Button<BC>>.dataWithOptionalSubMenu(
     id: String,
-    menu: KeyboardMenu<BC>?,
-    transitiveRegistration: Boolean = false,
+    textBuilder: suspend BC.() -> String,
     callbacksRegex: Regex = Regex(id),
-    menuBuilder: suspend BC.(DataCallbackQuery) -> KeyboardMenu<BC>? = { menu },
-    textBuilder: suspend BC.() -> String
+    menuBuilder: suspend BC.(DataCallbackQuery?) -> KeyboardMenu<BC>?
 ) = +KeyboardBuilder.Button.Data(
     id = id,
-    reaction = KeyboardBuilder.Button.Data.Reaction.Keyboard(menu, transitiveRegistration, menuBuilder),
+    reaction = KeyboardBuilder.Button.Data.Reaction.Keyboard(menuBuilder),
     callbacksRegex = callbacksRegex,
     textBuilder = textBuilder
 )
-fun <BC : BehaviourContext> RowBuilder<KeyboardBuilder.Button<BC>>.dataWithNewMenu(
+
+/**
+ * Build default data button with optionally included submenu (if not empty)
+ *
+ * @param menuBuilder Will receive null as [DataCallbackQuery] on setup stage to setup full menu triggers
+ */
+fun <BC : BehaviourContext> RowBuilder<KeyboardBuilder.Button<BC>>.dataWithSubMenu(
     id: String,
     textBuilder: suspend BC.() -> String,
     callbacksRegex: Regex = Regex(id),
     menuBuilder: KeyboardBuilder<BC>.(DataCallbackQuery?) -> Unit
-) = data(
+) = dataWithOptionalSubMenu(
     id = id,
-    menu = buildMenu {
-        menuBuilder(null)
-    },
-    transitiveRegistration = true,
+    textBuilder = textBuilder,
     callbacksRegex = callbacksRegex,
     menuBuilder = {
         buildMenu {
             menuBuilder(it)
         }
-    },
-    textBuilder = textBuilder
+    }
 )
 
 
 fun <BC : BehaviourContext> RowBuilder<KeyboardBuilder.Button<BC>>.data(
     id: String,
+    text: String,
     reaction: KeyboardBuilder.Button.Data.Reaction<BC>,
-    callbacksRegex: Regex = Regex(id),
-    text: String
+    callbacksRegex: Regex = Regex(id)
 ) = data(
     id = id,
     reaction = reaction,
@@ -85,35 +91,39 @@ fun <BC : BehaviourContext> RowBuilder<KeyboardBuilder.Button<BC>>.data(
     callbacksRegex = callbacksRegex,
     callback = callback
 )
-fun <BC : BehaviourContext> RowBuilder<KeyboardBuilder.Button<BC>>.data(
+
+/**
+ * Build default data button with optionally included submenu (if not null)
+ *
+ * @param menuBuilder Will receive null as [DataCallbackQuery] on setup stage to setup full menu triggers
+ */
+fun <BC : BehaviourContext> RowBuilder<KeyboardBuilder.Button<BC>>.dataWithOptionalSubMenu(
     id: String,
     text: String,
-    menu: KeyboardMenu<BC>,
     callbacksRegex: Regex = Regex(id),
-    transitiveRegistration: Boolean = false,
-    menuBuilder: suspend BC.(DataCallbackQuery) -> KeyboardMenu<BC>? = { menu },
-) = data(
+    menuBuilder: suspend BC.(DataCallbackQuery?) -> KeyboardMenu<BC>?,
+) = dataWithOptionalSubMenu(
     id = id,
-    menu = menu,
-    transitiveRegistration = transitiveRegistration,
-    callbacksRegex = callbacksRegex,
     textBuilder = { text },
+    callbacksRegex = callbacksRegex,
     menuBuilder = menuBuilder
 )
-fun <BC : BehaviourContext> RowBuilder<KeyboardBuilder.Button<BC>>.dataWithNewMenu(
+
+/**
+ * Build default data button with optionally included submenu (if not null)
+ *
+ * @param menuBuilder Will receive null as [DataCallbackQuery] on setup stage to setup full menu triggers
+ */
+fun <BC : BehaviourContext> RowBuilder<KeyboardBuilder.Button<BC>>.dataWithSubMenu(
     id: String,
     text: String,
     callbacksRegex: Regex = Regex(id),
     menuBuilder: KeyboardBuilder<BC>.(DataCallbackQuery?) -> Unit
-) = dataWithNewMenu(
+) = dataWithSubMenu(
     id = id,
     textBuilder = { text },
     callbacksRegex = callbacksRegex,
-    menuBuilder = {
-        buildMenu {
-            menuBuilder(it)
-        }
-    }
+    menuBuilder = menuBuilder
 )
 
 

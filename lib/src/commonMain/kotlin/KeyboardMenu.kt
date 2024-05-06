@@ -5,10 +5,13 @@ import dev.inmo.micro_utils.common.either
 import dev.inmo.micro_utils.common.onFirst
 import dev.inmo.micro_utils.common.onSecond
 import dev.inmo.micro_utils.coroutines.launchSafelyWithoutExceptions
+import dev.inmo.tgbotapi.bot.TelegramBot
 import dev.inmo.tgbotapi.bot.exceptions.MessageIsNotModifiedException
 import dev.inmo.tgbotapi.extensions.behaviour_builder.BehaviourContext
+import dev.inmo.tgbotapi.extensions.behaviour_builder.DefaultBehaviourContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.createSubContext
 import dev.inmo.tgbotapi.extensions.behaviour_builder.stop
+import dev.inmo.tgbotapi.extensions.behaviour_builder.utils.handlers_registrar.TriggersHolder
 import dev.inmo.tgbotapi.requests.edit.reply_markup.EditChatMessageReplyMarkup
 import dev.inmo.tgbotapi.requests.edit.reply_markup.EditInlineMessageReplyMarkup
 import dev.inmo.tgbotapi.types.ChatIdentifier
@@ -17,6 +20,9 @@ import dev.inmo.tgbotapi.types.MessageId
 import dev.inmo.tgbotapi.types.buttons.InlineKeyboardMarkup
 import dev.inmo.tgbotapi.types.buttons.Matrix
 import dev.inmo.tgbotapi.types.message.abstracts.Message
+import dev.inmo.tgbotapi.types.update.abstracts.Update
+import dev.inmo.tgbotapi.updateshandlers.UpdatesFilter
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.*
 
@@ -132,6 +138,22 @@ class KeyboardMenu<BC : BehaviourContext> internal constructor(
             }
         )
     }
+}
+
+suspend fun TelegramBot.setupMenuTriggers(
+    menu: KeyboardMenu<DefaultBehaviourContext>,
+    scope: CoroutineScope,
+    upstreamUpdatesFlow: Flow<Update>,
+    triggersHolder: TriggersHolder = TriggersHolder()
+): DefaultBehaviourContext {
+    val context = DefaultBehaviourContext(
+        bot = this,
+        scope = scope,
+        upstreamUpdatesFlow = upstreamUpdatesFlow,
+        triggersHolder = triggersHolder
+    )
+    menu.setupTriggers(context)
+    return context
 }
 
 suspend fun <BC : BehaviourContext> BC.setupMenuTriggers(menu: KeyboardMenu<in BC>): KeyboardMenu<in BC> {

@@ -1,228 +1,71 @@
-# How to use
+# [KTgBotAPI](https://github.com/InsanusMokrassar/ktgbotapi) keyboards library [![Maven Central](https://maven-badges.herokuapp.com/maven-central/dev.inmo/ktgbotapi.keyboards.lib/badge.svg)](https://maven-badges.herokuapp.com/maven-central/dev.inmo/ktgbotapi.keyboards.lib)
 
-That is a template for Kotlin Multiplatform Projects. How to use it:
+This library provides special DSL for Telegram Bots API keyboards.
 
-* Create your repository from this template
-* Add `local.properties` file in case you plan to use `Android` target (you must set up location of SDK, it will not be tracked by `git` and it is correct behaviour). In the snippet below you may see approximate content of `local.properties` file:
-```properties
-## This file must *NOT* be checked into Version Control Systems,
-# as it contains information specific to your local configuration.
-#
-# Location of the SDK. This is only used by Gradle.
-# For customization when using a Version Control System, please read the
-# header note.
-sdk.dir=/your/path/to/android/sdk
-```
-* Replace in a whole project `project_group` by your group
-* Replace in a whole project `project_name` by your **ROOT** project name
-* Update your subproject packages. It is not critical, but recommended especially in case you plan to publish your
-  library
+## Connection
 
-## Subprojects
-
-In this template there is only one subproject with name `lib`. You are always able to rename it, but remember that in
-this case you must rename it in `settings.gradle` file.
-
-## JVM sources in Android target
-
-By default JVM code is not included in Android target. In case you wish to include JVM sources in Android build, use
-next method in the `sourceSets` section of your `build.gradle`:
+Gradle Groovy:
 
 ```groovy
-kotlin {
-    sourceSets {
-        // Some other code
-        androidMain {
-            // Some other code (like dependencies)
-            dependsOn jvmMain
-        }
-    }
-}
+implementation "dev.inmo:tgbotapi.keyboards.lib:$version"
 ```
 
-In case when you need to be sure that JVM sources are not included in Android part, just remove line with `dependsOn jvmMain`
+Gradle Kotlin:
 
-## Types of projects
+```kotlin
+implementation("dev.inmo:tgbotapi.keyboards.lib:$version")
+```
 
-### `mppProjectWithSerialization`
+Maven:
 
-This type of preset have `JVM`, `JS` and `Android` targets and available using
-`apply from: "$mppProjectWithSerializationPresetPath"`. Template for project with this preset looks like next snippet:
+```xml
+<dependency>
+  <groupId>dev.inmo</groupId>
+  <artifactId>tgbotapi.keyboards.lib</artifactId>
+  <version>$version</version>
+</dependency>
+```
 
-```groovy
-plugins {
-    id "org.jetbrains.kotlin.multiplatform"
-    id "org.jetbrains.kotlin.plugin.serialization"
-    id "com.android.library"
-}
+## How to use
 
-apply from: "$mppProjectWithSerializationPresetPath"
-
-// The code below is optional
-
-kotlin {
-    sourceSets {
-        commonMain {
-            dependencies {
-                // common dependencies
-            }
-        }
-        commonTest {
-            dependencies {
-                // common test dependencies
-            }
-        }
-        jvmMain {
-            dependencies {
-                // jvm dependencies
-            }
-        }
-        jvmTest {
-            dependencies {
-                // jvm test dependencies
-            }
-        }
-        jsMain {
-            dependencies {
-                // js dependencies
-            }
-        }
-        jsTest {
-            dependencies {
-                // js test dependencies
-            }
-        }
-        androidMain {
-            dependencies {
-                // android dependencies
-            }
-        }
-        androidTest {
-            dependencies {
-                // android test dependencies
+```kotlin
+val menu = buildMenu rootMenu@{
+    row {
+        dataWithsubMenu(
+            id = "sample", // id for button to be used in current menu
+            text = "Sample", // text for button
+            callbacksRegex = Regex("sample") // optional regex for all callbacks to be registered in the future
+        ) { // callback for builder, here `it` is `DataCallbackQuery?`, where null-value means initial setup
+            row {
+                dataWithOptionalSubMenu(
+                    id = "back", // id for button to be used in current menu
+                    text = "Back", // text for button
+                    callbacksRegex = Regex("back") // optional regex for all callbacks to be registered in the future
+                ) {
+                    if (it != null) { // when real request
+                        this@rootMenu.buildLazy()
+                    } else { // when initial call
+                        null
+                    }
+                }
             }
         }
     }
 }
 ```
 
-### `mppJavaProject`
+As you may see, there are two phases in common case:
 
-This type of preset have only `JVM` target and available using `apply from: "$mppJavaProjectPresetPath"`. Template for
-project with this preset looks like next snippet:
+* Initialization of menus
+* Handling of requests
 
-```groovy
-plugins {
-    id "org.jetbrains.kotlin.multiplatform"
-}
+### Initialization of menus
 
-apply from: "$mppJavaProjectPresetPath"
+So, we have `menu` and now we may setup it in bot:
 
-// The code below is optional
-
-kotlin {
-    sourceSets {
-        commonMain {
-            dependencies {
-                // common dependencies
-            }
-        }
-        commonTest {
-            dependencies {
-                // common test dependencies
-            }
-        }
-        jvmMain {
-            dependencies {
-                // jvm dependencies
-            }
-        }
-        jvmTest {
-            dependencies {
-                // jvm test dependencies
-            }
-        }
-    }
-}
-```
-
-### `mppJsProject`
-
-This type of preset have only `JS` target and available using `apply from: "mppJsProjectPresetPath"`. Template for
-project with this preset looks like next snippet:
-
-```groovy
-plugins {
-    id "org.jetbrains.kotlin.multiplatform"
-}
-
-apply from: "$mppJsProjectPresetPath"
-
-// The code below is optional
-
-kotlin {
-    sourceSets {
-        commonMain {
-            dependencies {
-                // common dependencies
-            }
-        }
-        commonTest {
-            dependencies {
-                // common test dependencies
-            }
-        }
-        jsMain {
-            dependencies {
-                // jvm dependencies
-            }
-        }
-        jsTest {
-            dependencies {
-                // jvm test dependencies
-            }
-        }
-    }
-}
-```
-
-### `mppAndroidProject`
-
-This type of preset have only `Android` target and available using `apply from: "$mppAndroidProjectPresetPath"`. Template for
-project with this preset looks like next snippet:
-
-```groovy
-plugins {
-    id "org.jetbrains.kotlin.multiplatform"
-    id "com.android.library"
-}
-
-apply from: "$mppAndroidProjectPresetPath"
-
-// The code below is optional
-
-kotlin {
-    sourceSets {
-        commonMain {
-            dependencies {
-                // common dependencies
-            }
-        }
-        commonTest {
-            dependencies {
-                // common test dependencies
-            }
-        }
-        androidMain {
-            dependencies {
-                // android dependencies
-            }
-        }
-        androidTest {
-            dependencies {
-                // android test dependencies
-            }
-        }
-    }
+```kotlin
+val bot = telegramBot("YOUR TOKEN")
+bot.buildBehaviourWithLongPolling {
+    setupMenuTriggers(menu) // setting up listening of buttons clicking
 }
 ```

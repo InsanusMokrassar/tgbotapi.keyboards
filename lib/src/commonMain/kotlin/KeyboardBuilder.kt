@@ -87,7 +87,7 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
                                         EditChatMessageReplyMarkup(
                                             it.message.chat.id,
                                             it.message.messageId,
-                                            keyboard
+                                            replyMarkup = keyboard
                                         )
                                     )
                                     is InaccessibleMessageDataCallbackQuery -> return@onDataCallbackQuery

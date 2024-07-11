@@ -3,7 +3,7 @@
 kotlin = "1.9.23"
 kotlin-serialization = "1.6.3"
 
-tgbotapi = "12.0.1"
+tgbotapi = "15.1.0"
 
 dokka = "1.9.20"
 

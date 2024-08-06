@@ -15,14 +15,6 @@ kotlin {
         browser()
         nodejs()
     }
-    androidTarget {
-        publishAllLibraryVariants()
-        compilations.all {
-            kotlinOptions {
-                jvmTarget = "17"
-            }
-        }
-    }
 
     sourceSets {
         commonMain {
@@ -48,13 +40,6 @@ kotlin {
                 implementation libs.kotlin.test.junit
             }
         }
-        androidUnitTest {
-            dependencies {
-                implementation libs.kotlin.test.junit
-                implementation libs.android.test.junit
-                implementation libs.android.test.espresso.core
-            }
-        }
     }
 }
 
@@ -62,5 +47,3 @@ java {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
 }
-
-apply from: "$defaultAndroidSettingsPresetPath"

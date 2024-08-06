@@ -15,8 +15,14 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onDataCa
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onPreCheckoutQuery
 import dev.inmo.tgbotapi.extensions.behaviour_builder.utils.SimpleFilter
 import dev.inmo.tgbotapi.extensions.utils.extensions.sameMessage
+import dev.inmo.tgbotapi.keyboards.lib.dsl.DataButtonRequestBuilder
+import dev.inmo.tgbotapi.keyboards.lib.dsl.DataButtonRequestBuilderNamespace
+import dev.inmo.tgbotapi.keyboards.lib.dsl.DataButtonTextRequestBuilder
+import dev.inmo.tgbotapi.requests.abstracts.Request
 import dev.inmo.tgbotapi.requests.edit.reply_markup.EditChatMessageReplyMarkup
 import dev.inmo.tgbotapi.requests.edit.reply_markup.EditInlineMessageReplyMarkup
+import dev.inmo.tgbotapi.requests.edit.text.EditChatMessageText
+import dev.inmo.tgbotapi.requests.edit.text.EditInlineMessageText
 import dev.inmo.tgbotapi.types.*
 import dev.inmo.tgbotapi.types.InlineQueries.query.BaseInlineQuery
 import dev.inmo.tgbotapi.types.InlineQueries.query.InlineQuery
@@ -36,6 +42,7 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
             val id: String,
             val reaction: Reaction<BC>,
             val callbacksRegex: Regex = Regex(id),
+            val requestBuilder: DataButtonRequestBuilder<BC> = DataButtonRequestBuilderNamespace.defaultRequestBuilder(),
             val textBuilder: suspend BC.() -> String
         ) : Button<BC> {
             /**
@@ -76,22 +83,9 @@ class KeyboardBuilder<BC : BehaviourContext> : MatrixBuilder<KeyboardBuilder.But
                             reaction.keyboardMenuBuilder.invoke(this, null) ?.setupTriggers(this)
                             onDataCallbackQuery(callbacksRegex) {
                                 val keyboard = reaction.keyboardMenuBuilder(this, it) ?.buildButtons(this)
-                                when (it) {
-                                    is InlineMessageIdDataCallbackQuery -> execute(
-                                        EditInlineMessageReplyMarkup(
-                                            it.inlineMessageId,
-                                            keyboard
-                                        )
-                                    )
-                                    is MessageDataCallbackQuery -> execute(
-                                        EditChatMessageReplyMarkup(
-                                            it.message.chat.id,
-                                            it.message.messageId,
-                                            replyMarkup = keyboard
-                                        )
-                                    )
-                                    is InaccessibleMessageDataCallbackQuery -> return@onDataCallbackQuery
-                                }
+                                execute(
+                                    requestBuilder(it, keyboard) ?: return@onDataCallbackQuery
+                                )
                             }
                         }
                     }

@@ -10,11 +10,13 @@ fun <BC : BehaviourContext> RowBuilder<KeyboardBuilder.Button<BC>>.data(
     id: String,
     reaction: KeyboardBuilder.Button.Data.Reaction<BC>,
     callbacksRegex: Regex = Regex(id),
+    requestBuilder: DataButtonRequestBuilder<BC> = DataButtonRequestBuilderNamespace.defaultRequestBuilder(),
     textBuilder: suspend BC.() -> String
 ) = +KeyboardBuilder.Button.Data(
     id = id,
     reaction = reaction,
     callbacksRegex = callbacksRegex,
+    requestBuilder = requestBuilder,
     textBuilder = textBuilder
 )
 
@@ -22,11 +24,13 @@ fun <BC : BehaviourContext> RowBuilder<KeyboardBuilder.Button<BC>>.data(
     id: String,
     textBuilder: suspend BC.() -> String,
     callbacksRegex: Regex = Regex(id),
+    requestBuilder: DataButtonRequestBuilder<BC> = DataButtonRequestBuilderNamespace.defaultRequestBuilder(),
     callback: suspend BC.(DataCallbackQuery) -> Unit
 ) = +KeyboardBuilder.Button.Data(
     id = id,
     reaction = KeyboardBuilder.Button.Data.Reaction.Action(callback),
     callbacksRegex = callbacksRegex,
+    requestBuilder = requestBuilder,
     textBuilder = textBuilder
 )
 
@@ -39,11 +43,13 @@ fun <BC : BehaviourContext> RowBuilder<KeyboardBuilder.Button<BC>>.dataWithOptio
     id: String,
     textBuilder: suspend BC.() -> String,
     callbacksRegex: Regex = Regex(id),
+    requestBuilder: DataButtonRequestBuilder<BC> = DataButtonRequestBuilderNamespace.defaultRequestBuilder(),
     menuBuilder: suspend BC.(DataCallbackQuery?) -> KeyboardMenu<BC>?
 ) = +KeyboardBuilder.Button.Data(
     id = id,
     reaction = KeyboardBuilder.Button.Data.Reaction.Keyboard(menuBuilder),
     callbacksRegex = callbacksRegex,
+    requestBuilder = requestBuilder,
     textBuilder = textBuilder
 )
 
@@ -56,11 +62,13 @@ fun <BC : BehaviourContext> RowBuilder<KeyboardBuilder.Button<BC>>.dataWithSubMe
     id: String,
     textBuilder: suspend BC.() -> String,
     callbacksRegex: Regex = Regex(id),
+    requestBuilder: DataButtonRequestBuilder<BC> = DataButtonRequestBuilderNamespace.defaultRequestBuilder(),
     menuBuilder: KeyboardBuilder<BC>.(DataCallbackQuery?) -> Unit
 ) = dataWithOptionalSubMenu(
     id = id,
     textBuilder = textBuilder,
     callbacksRegex = callbacksRegex,
+    requestBuilder = requestBuilder,
     menuBuilder = {
         buildMenu {
             menuBuilder(it)
@@ -73,11 +81,13 @@ fun <BC : BehaviourContext> RowBuilder<KeyboardBuilder.Button<BC>>.data(
     id: String,
     text: String,
     reaction: KeyboardBuilder.Button.Data.Reaction<BC>,
+    requestBuilder: DataButtonRequestBuilder<BC> = DataButtonRequestBuilderNamespace.defaultRequestBuilder(),
     callbacksRegex: Regex = Regex(id)
 ) = data(
     id = id,
     reaction = reaction,
     callbacksRegex = callbacksRegex,
+    requestBuilder = requestBuilder,
 ) { text }
 
 fun <BC : BehaviourContext> RowBuilder<KeyboardBuilder.Button<BC>>.data(
@@ -101,11 +111,13 @@ fun <BC : BehaviourContext> RowBuilder<KeyboardBuilder.Button<BC>>.dataWithOptio
     id: String,
     text: String,
     callbacksRegex: Regex = Regex(id),
+    requestBuilder: DataButtonRequestBuilder<BC> = DataButtonRequestBuilderNamespace.defaultRequestBuilder(),
     menuBuilder: suspend BC.(DataCallbackQuery?) -> KeyboardMenu<BC>?,
 ) = dataWithOptionalSubMenu(
     id = id,
     textBuilder = { text },
     callbacksRegex = callbacksRegex,
+    requestBuilder = requestBuilder,
     menuBuilder = menuBuilder
 )
 
